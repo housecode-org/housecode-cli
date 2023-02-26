@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { Text } from "ink";
 import { globbySync } from "globby";
 
 import { join } from "path";
@@ -96,9 +95,7 @@ export const Router = () => {
       }}
     >
       <ErrorBoundary>
-        <React.Suspense fallback={<Text></Text>}>
-          {Route && <Route />}
-        </React.Suspense>
+        <React.Suspense fallback={<></>}>{Route && <Route />}</React.Suspense>
       </ErrorBoundary>
     </RouteContext.Provider>
   );

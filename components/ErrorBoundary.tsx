@@ -1,4 +1,3 @@
-import { Text } from "ink";
 import React from "react";
 import { CustomErrorPage } from "./CustomErrorPage.js";
 

@@ -27,7 +27,7 @@ export const CustomErrorPage = (props: { error: Error }) => {
       import(routeFileUrl).then((page) => {
         const Route = page.default;
         setCurrentRoute(() => (props: { error: Error }) => (
-          <React.Suspense fallback={<Text></Text>}>
+          <React.Suspense fallback={<></>}>
             {Route && <Route error={props.error} />}
           </React.Suspense>
         ));
@@ -39,10 +39,10 @@ export const CustomErrorPage = (props: { error: Error }) => {
     return <Route error={props.error} />;
   } else {
     return (
-      <Text>
-        <Text color="red">An error has occured</Text>
-        <Text>{props.error?.message ?? props.error?.toString()}</Text>
-      </Text>
+      <>
+        <Text>An error has occured</Text>
+        <Text>{props.error?.message}</Text>
+      </>
     );
   }
 };
