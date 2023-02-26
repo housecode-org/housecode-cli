@@ -2,10 +2,9 @@ import React, { useEffect } from "react";
 import { Text } from "ink";
 import { globbySync } from "globby";
 
-import path from "path";
-import { fileURLToPath } from "url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { join } from "path";
+import { pathToFileURL } from "url";
+import ErrorBoundary from "./ErrorBoundary.js";
 
 const RouteContext = React.createContext<{
   path: string;
@@ -29,6 +28,11 @@ export const Router = () => {
   const [Route, setCurrentRoute] = React.useState<any>(null);
   const [path, setPath] = React.useState("/");
   const [history, setHistory] = React.useState<string[]>([]);
+  const [pages] = React.useState(() => {
+    return globbySync(["./dist/pages/*.js"]).filter((page) => {
+      return page !== "./dist/pages/_app.js";
+    });
+  });
 
   const push = (path: string) => {
     setPath(path);
@@ -53,14 +57,10 @@ export const Router = () => {
     }, 0);
   };
 
-  const pages = globbySync(["../pages/*.js"], {
-    cwd: __dirname,
-  });
-
   useEffect(() => {
     const find = (pagePath: string) => {
       return pages.find((page) => {
-        const route = page.replace("../pages/", "").replace(".js", "");
+        const route = page.replace("./dist/pages/", "").replace(".js", "");
         const routePath = route === "index" ? "/" : `/${route}`;
         return routePath === pagePath;
       });
@@ -69,11 +69,17 @@ export const Router = () => {
     const currentRoute = find(path);
 
     if (currentRoute) {
-      setCurrentRoute(React.lazy(() => import(currentRoute)));
+      const routeFileUrl = pathToFileURL(
+        join(process.cwd(), currentRoute)
+      ).href;
+      setCurrentRoute(React.lazy(() => import(routeFileUrl)));
     } else {
-      const errorRoute = find("/404");
-      if (errorRoute) {
-        setCurrentRoute(React.lazy(() => import(errorRoute)));
+      const notFoundRoute = find("/404");
+      if (notFoundRoute) {
+        const routeFileUrl = pathToFileURL(
+          join(process.cwd(), notFoundRoute)
+        ).href;
+        setCurrentRoute(React.lazy(() => import(routeFileUrl)));
       }
     }
   }, [path]);
@@ -82,16 +88,18 @@ export const Router = () => {
     <RouteContext.Provider
       value={{
         path,
-        history: [],
+        history,
         push,
         back,
         replace,
         reload,
       }}
     >
-      <React.Suspense fallback={<Text>Loading...</Text>}>
-        {Route && <Route />}
-      </React.Suspense>
+      <ErrorBoundary>
+        <React.Suspense fallback={<Text></Text>}>
+          {Route && <Route />}
+        </React.Suspense>
+      </ErrorBoundary>
     </RouteContext.Provider>
   );
 };

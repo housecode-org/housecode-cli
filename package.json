@@ -9,8 +9,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "npm run build && node dist/_app.js",
-    "dev:help": "npm run build && node dist/_app.js --help",
+    "dev": "npm run build && node dist/pages/_app.js",
+    "dev:help": "npm run build && node dist/pages/_app.js --help",
     "pretest": "npm run build"
   },
   "dependencies": {

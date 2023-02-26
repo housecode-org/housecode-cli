@@ -5,6 +5,10 @@ import { useRouter } from "../components/Router.js";
 const HomePage = () => {
   const router = useRouter();
 
+  React.useEffect(() => {
+    throw new Error("123 Boom!");
+  }, []);
+
   return (
     <Text>
       HomePage
