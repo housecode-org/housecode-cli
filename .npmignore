@@ -1,0 +1,7 @@
+.git/
+bin/
+node_modules/
+packages/api/lib/
+!dist
+
+package-lock.json
