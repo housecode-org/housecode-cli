@@ -9,6 +9,10 @@
 		"noUnusedLocals": false
 	},
 	"include": [
-		"src"
+		"components/**/*",
+		"pages/**/*",
+		"utils/**/*",
+		"lib/**/*",
+		"_app.tsx",
 	]
 }
