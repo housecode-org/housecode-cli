@@ -6,13 +6,20 @@ const HomePage = () => {
   const router = useRouter();
 
   React.useEffect(() => {
-    throw new Error("123 Boom!");
+    // router.push("/user/solar");
+    // router.push("/user/special/santino");
+    // router.push("/articles/itsub/123");
+    // router.push("/post/itsub/123?2351");
+    // router.push("/comments");
+    // router.push("/comments/1/2/3/4");
+    // router.push("/info");
+    // router.push("/info/index");
   }, []);
 
   return (
     <Text>
       HomePage
-      <Text color="green">{router.path}</Text>
+      <Text color="green">{router.pathname}</Text>
     </Text>
   );
 };

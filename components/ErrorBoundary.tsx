@@ -1,11 +1,16 @@
 import React from "react";
 import { CustomErrorPage } from "./CustomErrorPage.js";
+import type { NextlyConfig } from "./Nextly.js";
 
+export interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  config: NextlyConfig;
+}
 class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
+  ErrorBoundaryProps,
   { hasError: boolean; error: Error | null }
 > {
-  constructor(props: { children: React.ReactNode }) {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
@@ -16,7 +21,9 @@ class ErrorBoundary extends React.Component<
 
   override render() {
     if (this.state.hasError)
-      return <CustomErrorPage error={this.state.error} />;
+      return (
+        <CustomErrorPage error={this.state.error} config={this.props.config} />
+      );
 
     return this.props.children;
   }
