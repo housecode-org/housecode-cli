@@ -12,8 +12,8 @@ const HomePage = () => {
     // router.push("/post/itsub/123?2351");
     // router.push("/comments");
     // router.push("/comments/1/2/3/4");
-    // router.push("/info");
     // router.push("/info/index");
+    router.push("/info");
   }, []);
 
   return (

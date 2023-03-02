@@ -15,8 +15,8 @@ export interface RouteContextProps {
   history: string[];
   push: (
     path: string,
-    _as?: string,
-    _options?: {
+    as?: string,
+    options?: {
       scroll?: boolean;
       shallow?: boolean;
       locale?: string;
@@ -24,8 +24,8 @@ export interface RouteContextProps {
   ) => void;
   replace: (
     path: string,
-    _as?: string,
-    _options?: {
+    as?: string,
+    options?: {
       scroll?: boolean;
       shallow?: boolean;
       locale?: string;
@@ -48,6 +48,9 @@ export const Router = (props?: RouterProps) => {
   const [isFallback, _setIsFallback] = React.useState(false);
   const [history, setHistory] = React.useState<string[]>([]);
   const [query, setQuery] = React.useState<Record<string, any>>({});
+  const [hydratedProps, setHydratedProps] = React.useState<Record<string, any>>(
+    {}
+  );
   const [pages] = React.useState(() => {
     return globbySync([`./dist${props.config.basePath}/**/*.js`]).filter(
       (page) => {
@@ -106,7 +109,7 @@ export const Router = (props?: RouterProps) => {
     }, 0);
   };
 
-  useEffect(() => {
+  const renderFileSystemPublicRoutes = async () => {
     const find = (pagePath: string) => {
       return pages.find((page) => {
         const route = page
@@ -118,11 +121,44 @@ export const Router = (props?: RouterProps) => {
     };
 
     const currentRoute = find(pathname);
+    const hydrate = async (component: any) => {
+      const { getInitialProps, getServerSideProps } = component as {
+        getServerSideProps: (props) => Promise<any>;
+        getInitialProps: (props) => Promise<any>;
+      };
+      if (getInitialProps) {
+        const hydrated = await getInitialProps({
+          query,
+          params: query,
+          pathname,
+          asPath,
+          req: null,
+          res: null,
+        });
+        setHydratedProps(hydrated ?? {});
+      } else if (getServerSideProps) {
+        const hydrated = await getServerSideProps({
+          query,
+          params: query,
+          pathname,
+          asPath,
+          req: null,
+          res: null,
+        });
+        setHydratedProps(hydrated.props ?? {});
+        if (hydrated.redirect) {
+          replace(hydrated.redirect.destination);
+          return;
+        }
+      }
+    };
 
     if (currentRoute) {
       const routeFileUrl = pathToFileURL(
         join(process.cwd(), currentRoute)
       ).href;
+
+      await hydrate(await import(routeFileUrl));
       setCurrentRoute(React.lazy(() => import(routeFileUrl)));
     } else {
       // support single slug routes
@@ -206,6 +242,8 @@ export const Router = (props?: RouterProps) => {
         const routeFileUrl = pathToFileURL(
           join(process.cwd(), dynamicRoutes)
         ).href;
+
+        await hydrate(await import(routeFileUrl));
         setCurrentRoute(React.lazy(() => import(routeFileUrl)));
       } else if (catchRoutes) {
         // set [...pid] -> pid name into query
@@ -236,6 +274,8 @@ export const Router = (props?: RouterProps) => {
         const routeFileUrl = pathToFileURL(
           join(process.cwd(), catchRoutes)
         ).href;
+
+        await hydrate(await import(routeFileUrl));
         setCurrentRoute(React.lazy(() => import(routeFileUrl)));
       } else {
         const notFoundRoute = find("/404");
@@ -243,10 +283,16 @@ export const Router = (props?: RouterProps) => {
           const routeFileUrl = pathToFileURL(
             join(process.cwd(), notFoundRoute)
           ).href;
+
+          await hydrate(await import(routeFileUrl));
           setCurrentRoute(React.lazy(() => import(routeFileUrl)));
         }
       }
     }
+  };
+
+  useEffect(() => {
+    if (props.config.useFileSystemPublicRoutes) renderFileSystemPublicRoutes();
   }, [pathname]);
 
   return (
@@ -264,7 +310,9 @@ export const Router = (props?: RouterProps) => {
       }}
     >
       <ErrorBoundary config={props.config}>
-        <React.Suspense fallback={<></>}>{Route && <Route />}</React.Suspense>
+        <React.Suspense fallback={<></>}>
+          {Route && <Route {...hydratedProps} />}
+        </React.Suspense>
       </ErrorBoundary>
     </RouteContext.Provider>
   );

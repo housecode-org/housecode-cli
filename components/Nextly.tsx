@@ -6,10 +6,12 @@ import Router from "./Router.js";
 
 export interface NextlyConfig {
   basePath: string;
+  useFileSystemPublicRoutes?: boolean;
 }
 
 const defaultConfig: NextlyConfig = {
   basePath: "/pages",
+  useFileSystemPublicRoutes: true,
 };
 
 export const Nextly = () => {
